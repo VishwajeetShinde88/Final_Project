@@ -285,44 +285,28 @@ export const GetTrendingKeywords = inngest.createFunction(
     async ({ event, step }) => {
         const { userInput, userEmail } = await event.data;
         // Get Google Search Result using BrightData
-const GoogleSearchResult = await step.run('GoogleSearchResult', async () => {
-  const resp = await axios.post(
-    'https://api.brightdata.com/request',
-    {
-      zone: 'tubepulse_dev',
-      url: `https://www.google.com/search?q=${encodeURIComponent(userInput)}&tbm=vid`,
-      format: 'json'
-    },
-    {
-      headers: {
-        'Authorization': `Bearer ${process.env.BRIGHT_DATA_API_KEY}`,
-        'Content-Type': 'application/json'
-      }
-    }
-  );
+        const GoogleSearchResult = await step.run('GoogleSearchResult', async () => {
 
-  const data = resp.data;
+            const resp = await axios.post('https://api.brightdata.com/request', {
+                zone: 'tubeai_dev',
+                url: 'https://www.google.com/search?q=' + userInput?.replaceAll(' ', '') + '&tbm=vid&brd_json=1',
+                format: 'json',
+            }, {
+                headers: {
+                    'Authorization': 'Bearer ' + process.env.BRIGHTDATA_API_KEY,
+                    'Content-Type': 'application/json'
+                }
+            })
+            const data = resp.data;//JSON string
+            const nestedJson = JSON.parse(data.body)// Parse to JSON
 
-  if (!data?.body) {
-    console.error("Empty body from Bright Data:", data);
-    throw new Error("Bright Data returned no content");
-  }
+            let titles: any = [];
+            nestedJson.organic.forEach((element: any) => {
+                titles.push(element?.title)
+            });
 
-  if (data.body.trim().startsWith("<")) {
-    console.error("Received HTML, not JSON. Possibly blocked by Google.");
-    throw new Error("Invalid JSON in Bright Data response");
-  }
-
-  const nestedJson = JSON.parse(data.body);
-  let titles: any[] | PromiseLike<any[]> = [];
-
-  nestedJson.organic?.forEach((element: { title: any; }) => {
-    titles.push(element.title);
-  });
-
-  return titles;
-});
-
+            return titles
+        })
         //Get Youtube search result using Youtube API
         const YoutubeResult = await step.run('Youtube Result', async () => {
             const result = await axios.get(`https://www.googleapis.com/youtube/v3/search?part=snippet&q=${userInput}&type=video&videoDuration=long&maxResults=10&key=` + process.env.YOUTUBE_API_KEY)
