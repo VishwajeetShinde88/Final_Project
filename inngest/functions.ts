@@ -74,7 +74,7 @@ export const GenerateAiThumbnail = inngest.createFunction(
         // Generate AI prompt from AI Model
         const generateThumbnailPrompt = await step.run('generateThumnailPrompt', async () => {
             const completion = await openai.chat.completions.create({
-                model: 'google/gemini-2.5-flash',
+                model: 'gpt-4o-mini',
                 messages: [
                     {
                         role: 'user',
@@ -218,7 +218,7 @@ export const GenerateAIContent = inngest.createFunction(
         //TO Generate Title,Description,Tags and Thumbnail Prompt
         const generateAiContent = await step.run('GenerateAiContent', async () => {
             const completion = await openai.chat.completions.create({
-                model: 'google/gemini-2.5-flash',
+                model: 'gpt-4o-mini',
                 messages: [
                     {
                         role: 'user',
@@ -297,15 +297,37 @@ export const GetTrendingKeywords = inngest.createFunction(
                     'Content-Type': 'application/json'
                 }
             })
-            const data = resp.data;//JSON string
-            const nestedJson = JSON.parse(data.body)// Parse to JSON
+        const data = resp.data;
 
-            let titles: any = [];
-            nestedJson.organic.forEach((element: any) => {
-                titles.push(element?.title)
-            });
+// 1️⃣ Check if the API returned anything
+if (!data || !data.body) {
+  console.error("❌ Bright Data returned empty or invalid response:", data);
+  throw new Error("Empty or invalid response from Bright Data API");
+}
 
-            return titles
+let nestedJson;
+
+// 2️⃣ Safely try to parse it
+try {
+  nestedJson = JSON.parse(data.body);
+} catch (err) {
+  console.error("❌ Failed to parse Bright Data response:", data.body);
+  throw new Error("Invalid JSON format in Bright Data response");
+}
+
+// 3️⃣ Defensive loop (won’t crash if organic missing)
+if (!nestedJson.organic || !Array.isArray(nestedJson.organic)) {
+  console.warn("⚠️ No organic results found:", nestedJson);
+  return [];
+}
+
+let titles: any = [];
+nestedJson.organic.forEach((element: any) => {
+  titles.push(element.title);
+});
+
+return titles;
+
         })
         //Get Youtube search result using Youtube API
         const YoutubeResult = await step.run('Youtube Result', async () => {
@@ -357,7 +379,7 @@ Return the result in this JSON format:
 
 `
             const completion = await openai.chat.completions.create({
-                model: 'google/gemini-2.5-flash',
+                model: 'gpt-4o-mini',
                 messages: [
                     {
                         role: 'user',

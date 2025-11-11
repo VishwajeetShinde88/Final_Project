@@ -39,7 +39,7 @@ export default function Home() {
           <div className="flex justify-center">
             <a className="inline-flex items-center gap-x-2 bg-white border border-gray-200 text-sm text-gray-800 p-1 ps-3 rounded-full transition hover:border-gray-300 dark:bg-neutral-800 dark:border-neutral-700 dark:hover:border-neutral-600 dark:text-neutral-200"
               href="https://tubeguruji.com" target="_blank" rel="noopener noreferrer">
-              TUBEGURUJI Membership - Join Now
+             
               <span className="py-1.5 px-2.5 inline-flex justify-center items-center gap-x-2 rounded-full bg-red-600 text-white font-semibold text-sm">
                 <svg className="flex-shrink-0 size-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                   <path d="m9 18 6-6-6-6" />
